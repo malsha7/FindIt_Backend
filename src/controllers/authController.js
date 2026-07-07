@@ -2,6 +2,8 @@ const authService = require("../services/authService");
 
 // register user
 const register = async (req, res) => {
+    console.log("REGISTER API HIT");
+    console.log(req.body);
     try {
         const user = await authService.register(req.body);
 
