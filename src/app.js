@@ -3,7 +3,7 @@ const cors = require("cors");
 
 const authRoutes = require("./routes/authRoutes");
 const itemRoutes = require("./routes/itemRoutes");
-
+const chatRoutes = require("./routes/chatRoutes");
 
 const app = express();
 
@@ -16,6 +16,7 @@ app.use(express.json());
 // routes
 app.use("/api/auth", authRoutes);
 app.use("/api/items", itemRoutes);
+app.use("/api/chat", chatRoutes);
 
 // testing Route
 app.get("/", (req, res) => {
