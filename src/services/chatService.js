@@ -47,13 +47,18 @@ const sendMessage = async (senderId, data) => {
 
 //get conversation for one item
 const getConversation = async (userId, otherUserId, itemId) => {
-    if (!mongoose.Types.ObjectId.isValid(otherUserId)) {
-        throw new Error("Invalid user ID");
-    }
 
-    if (!mongoose.Types.ObjectId.isValid(itemId)) {
-        throw new Error("Invalid item ID");
-    }
+    await Chat.updateMany(
+        {
+            sender: otherUserId,
+            receiver: userId,
+            item: itemId,
+            isRead: false
+        },
+        {
+            isRead: true
+        }
+    );
 
     const messages = await Chat.find({
         item: itemId,
@@ -71,18 +76,6 @@ const getConversation = async (userId, otherUserId, itemId) => {
         .populate("sender", "name email")
         .populate("receiver", "name email")
         .sort({ createdAt: 1 });
-
-    await Chat.updateMany(
-        {
-            sender: otherUserId,
-            receiver: userId,
-            item: itemId,
-            isRead: false
-        },
-        {
-            isRead: true
-        }
-    );
 
     return messages;
 };
