@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const Chat = require("../models/Chat");
 const User = require("../models/User");
 const Item = require("../models/Item");
+const Notification = require("../models/Notification");
 
 // send a message
 const sendMessage = async (senderId, data) => {
@@ -20,6 +21,10 @@ const sendMessage = async (senderId, data) => {
         throw new Error("Invalid item ID");
     }
 
+    if (senderId === receiver) {
+        throw new Error("You cannot send a message to yourself");
+    }
+
     const receiverUser = await User.findById(receiver);
 
     if (!receiverUser) {
@@ -32,11 +37,27 @@ const sendMessage = async (senderId, data) => {
         throw new Error("Item not found");
     }
 
+    // ensure the message receiver is the owner of the item
+    if (itemExists.owner.toString() !== receiver) {
+        throw new Error("Receiver must be the owner of the item");
+    }
+
     const chat = await Chat.create({
         sender: senderId,
         receiver,
         item,
         message
+    });
+
+    const sender = await User.findById(senderId);
+
+    await Notification.create({
+        receiver,
+        sender: senderId,
+        item,
+        type: "MESSAGE",
+        title: "New Message",
+        message: `${sender.name} sent you a message about "${itemExists.title}".`
     });
 
     return await Chat.findById(chat._id)
@@ -45,7 +66,7 @@ const sendMessage = async (senderId, data) => {
         .populate("item", "title category type");
 };
 
-//get conversation for one item
+// get conversation for one item
 const getConversation = async (userId, otherUserId, itemId) => {
 
     await Chat.updateMany(
@@ -82,6 +103,7 @@ const getConversation = async (userId, otherUserId, itemId) => {
 
 // get latest chats for logged-in user
 const getChatList = async (userId) => {
+
     const chats = await Chat.aggregate([
         {
             $match: {
